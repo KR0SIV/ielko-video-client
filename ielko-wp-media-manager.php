@@ -128,7 +128,24 @@ function checkactive($thevar,$thecheck) {
   }
 }
 
+function media_dur_conv($url)
+{
+    $result = shell_exec('ffprobe -i ' . ($url) . ' 2>&1');
+	preg_match('/Duration: \d\d:\d\d:\d\d/', $result, $match);
+	$match_time = preg_replace('/Duration:\D/', '', reset($match));
+	$str_time = preg_replace("/^([\d]{1,2})\:([\d]{2})$/", "00:$1:$2", $match_time);
+	sscanf($str_time, "%d:%d:%d", $hours, $minutes, $seconds);
+	$time_seconds = $hours * 3600 + $minutes * 60 + $seconds;
+	return((int)$time_seconds);
+}
 
+function media_bitrate_conv($url)
+{
+    $result = shell_exec('ffprobe -i ' . ($url) . ' 2>&1');
+	preg_match('/bitrate:\D\d\d\d./', $result, $match);
+	$rate = preg_replace('/bitrate:\D/', '', reset($match));
+	return($rate);
+}
 
 function create_work_meta( $post ){
     wp_nonce_field( basename( __FILE__ ), 'media_meta_box_nonce' );
@@ -156,7 +173,6 @@ function create_work_meta( $post ){
             <input type=\'text\' name=\'media_description\' value=\''. $media_description . '\' style=\'width:97%\' />
         </p>
 
-         
         <p>
         	<label for=\'media_genre\'>Media Genre (Updates to DB but does not update on form):</label>
         	<br />
@@ -246,8 +262,6 @@ function create_work_meta( $post ){
 }
 
 
-
-
 function save_media_meta( $post_id ){
     if( !isset( $_POST['media_meta_box_nonce'] ) || !wp_verify_nonce( $_POST['media_meta_box_nonce'], basename( __FILE__ ) ) ){
             return;
@@ -262,6 +276,9 @@ function save_media_meta( $post_id ){
     }
     if( isset( $_REQUEST['media_url'] ) ){
         update_post_meta( $post_id, 'media_url', sanitize_text_field( $_POST['media_url'] ) );
+        $media_url = get_post_meta( $post_id, 'media_url', true );
+        update_post_meta( $post_id, 'media_duration', media_dur_conv($media_url));
+        update_post_meta( $post_id, 'media_bitrate', media_bitrate_conv($media_url));
     }
 
     if( isset( $_REQUEST['media_description'] ) ){
@@ -273,9 +290,9 @@ function save_media_meta( $post_id ){
     if( isset( $_REQUEST['media_active'] ) ){
         update_post_meta( $post_id, 'media_active', sanitize_text_field( $_POST['media_active'] ) );
     }
-    //if( isset( $_REQUEST['media_duration'] ) ){
-    //    update_post_meta( $post_id, 'media_duration', sanitize_text_field( $_POST['media_duration'] ) );
-    //}    
+//    if( isset( $_REQUEST['media_duration'] ) ){
+//        update_post_meta( $post_id, 'media_duration', sanitize_text_field( $_POST['media_duration'] ) );
+//    }    
     if( isset( $_REQUEST['media_type'] ) ){
         update_post_meta( $post_id, 'media_type', sanitize_text_field( $_POST['media_type'] ) );
     }
@@ -491,26 +508,6 @@ $themainarray = array (
     )
 );
 
-function media_dur_conv($url)
-{
-    $result = shell_exec('ffprobe -i ' . ($url) . ' 2>&1');
-	preg_match('/Duration: \d\d:\d\d:\d\d/', $result, $match);
-	$match_time = preg_replace('/Duration:\D/', '', reset($match));
-	$str_time = preg_replace("/^([\d]{1,2})\:([\d]{2})$/", "00:$1:$2", $match_time);
-	sscanf($str_time, "%d:%d:%d", $hours, $minutes, $seconds);
-	$time_seconds = $hours * 3600 + $minutes * 60 + $seconds;
-	return($time_seconds);
-}
-
-
-function media_bitrate_conv($url)
-{
-    $result = shell_exec('ffprobe -i ' . ($url) . ' 2>&1');
-	preg_match('/bitrate:\D\d\d\d\s/', $result, $match);
-	$rate = preg_replace('/bitrate:\D/', '', $match);
-	return(reset($rate));
-}
-
 $cats = get_categories();
 
 foreach ($cats as $cat) {
@@ -524,8 +521,9 @@ foreach ($cats as $cat) {
           $thetitle = get_the_title();
           $theurl = get_post_meta(get_the_ID(), 'media_url', true);
           $thedescription = get_post_meta(get_the_ID(), 'media_description', true);
-          //$media_duration = get_post_meta(get_the_ID(), 'media_duration', true);
+          $media_duration = get_post_meta(get_the_ID(), 'media_duration', true);
           $media_genre = get_post_meta(get_the_ID(), 'media_genre', true);
+          $media_bitrate = get_post_meta(get_the_ID(), 'media_bitrate', true);
           $theimg =  wp_get_attachment_image_src( get_post_thumbnail_id( get_the_ID()), 'single-post-thumbnail' );
 					$theimg =  $theimg[0];
           $thefrmt = 'mp4';
@@ -552,9 +550,8 @@ foreach ($cats as $cat) {
 
 $genres = array($media_genre);
 $tags = array($thecategory);
-//$duration = $media_duration;
-$bitrate = media_bitrate_conv($theurl);
-$duration = media_dur_conv($theurl);
+$duration = $media_duration;
+$bitrate = $media_bitrate;
 $captions = array();
 if($theimg === null) {
 	$thetitle_ = preg_replace('/\s+/', '_', $thetitle);

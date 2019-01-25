@@ -129,11 +129,14 @@ function checkactive($thevar,$thecheck) {
 }
 
 
+
 function create_work_meta( $post ){
     wp_nonce_field( basename( __FILE__ ), 'media_meta_box_nonce' );
     $media_url = get_post_meta( $post->ID, 'media_url', true );
     $media_description = get_post_meta( $post->ID, 'media_description', true );
     $media_active = get_post_meta( $post->ID, 'media_active', true );
+    $media_genre = get_post_meta( $post->ID, 'media_genre', true);
+    $media_duration = get_post_meta( $post->ID, 'media_duration', true);
     $media_type = get_post_meta( $post->ID, 'media_type', true );
     $media_qty = get_post_meta( $post->ID, 'media_qty', true );
 		$media_excl_check = get_post_meta( $post->ID, 'media_excl_check', true );
@@ -142,7 +145,7 @@ function create_work_meta( $post ){
 		$media_excl_premium = get_post_meta( $post->ID, 'media_excl_premium', true );
     echo '<div>
         <p>
-            <label for=\'media_url\'>Media URL (could be the url of a  video you uploaded in the media library, a youtube link, an m3u8 link etc..):</label>
+            <label for=\'media_url\'>Media URL (Hardcoded for MP4 Only):</label>
             <br />
             <input type=\'url\' name=\'media_url\' value=\'' . $media_url .'\' required style=\'width:97%\' />
         </p>
@@ -153,7 +156,45 @@ function create_work_meta( $post ){
             <input type=\'text\' name=\'media_description\' value=\''. $media_description . '\' style=\'width:97%\' />
         </p>
 
+         
         <p>
+        	<label for=\'media_genre\'>Media Genre (Updates to DB but does not update on form):</label>
+        	<br />
+        	<select name=\'media_genre\' value=\''. $media_genre . '\' style=\'width:97%\' />
+			<option value="action">Action</option>
+			<option value="adventure">Adventure</option>
+			<option value="animals">Animals</option>
+			<option value="animated">Animated</option>
+			<option value="anime">Anime</option>
+			<option value="children">Children</option>
+			<option value="comedy">Comedy</option>
+			<option value="crime">Crime</option>
+			<option value="documentary">Documentary</option>
+			<option value="drama">Drama</option>
+			<option value="educational">Educational</option>
+			<option value="fantasy">Fantasy</option>
+			<option value="faith">Faith</option>
+			<option value="food">Food</option>
+			<option value="fashion">Fashion</option>
+			<option value="gaming">Gaming</option>
+			<option value="health">Health</option>
+			<option value="history">History</option>
+			<option value="horror">Horror</option>
+			<option value="miniseries">Miniseries</option>
+			<option value="mystery">Mystery</option>
+			<option value="nature">Nature</option>
+			<option value="news">News</option>
+			<option value="reality">Reality</option>
+			<option value="romance">Romance</option>
+			<option value="science">Science</option>
+			<option value="science fiction">Science Fiction</option>
+			<option value="sitcom">Sitcom</option>
+			<option value="special">Special</option>
+			<option value="sports">Sports</option>
+			<option value="thriller">Thriller</option>
+			<option value="technology">Technology</option>
+        	</select>
+        </p>      
             <label for=\'media_active\'>Is it Active? :</label>
             <br />
             <input type=\'radio\' name=\'media_active\' value=\'1\' '.checkactive($media_active,1).'> Yes<br>
@@ -226,9 +267,15 @@ function save_media_meta( $post_id ){
     if( isset( $_REQUEST['media_description'] ) ){
         update_post_meta( $post_id, 'media_description', sanitize_text_field( $_POST['media_description'] ) );
     }
+    if( isset( $_REQUEST['media_genre'] ) ){
+        update_post_meta( $post_id, 'media_genre', sanitize_text_field( $_POST['media_genre'] ) );
+    }    
     if( isset( $_REQUEST['media_active'] ) ){
         update_post_meta( $post_id, 'media_active', sanitize_text_field( $_POST['media_active'] ) );
     }
+    //if( isset( $_REQUEST['media_duration'] ) ){
+    //    update_post_meta( $post_id, 'media_duration', sanitize_text_field( $_POST['media_duration'] ) );
+    //}    
     if( isset( $_REQUEST['media_type'] ) ){
         update_post_meta( $post_id, 'media_type', sanitize_text_field( $_POST['media_type'] ) );
     }
@@ -259,6 +306,8 @@ while ( $wpb_all_query->have_posts() ) : $wpb_all_query->the_post();
 $thetitle = get_the_title();
 $theurl = get_post_meta(get_the_ID(), 'media_url', true);
 $thedescription = get_post_meta(get_the_ID(), 'media_description', true);
+$media_genre = get_post_meta(get_the_ID(), 'media_genre', true);
+//$media_duration = get_post_meta(get_the_ID(), 'media_duration', true);
 $theimg =  wp_get_attachment_image_src( get_post_thumbnail_id( get_the_ID()), 'single-post-thumbnail' );
 $theimg =  $theimg[0];
 echo '<a target="_blank" href="http://greektv.upg.gr/upg_player.html?play='.$theurl.'">'.$thetitle.'</a><br />';
@@ -300,9 +349,10 @@ if ($thecategory != 'Uncategorized') {
           $thetitle = get_the_title();
           $theurl = get_post_meta(get_the_ID(), 'media_url', true);
           $thedescription = get_post_meta(get_the_ID(), 'media_description', true);
+          $media_genre = get_post_meta(get_the_ID(), 'media_genre', true);
           $theimg =  wp_get_attachment_image_src( get_post_thumbnail_id( get_the_ID()), 'single-post-thumbnail' );
 					$theimg =  $theimg[0];
-          $thefrmt = 'hls';
+          $thefrmt = 'mp4';
           $thestrg = 'full-adaptation';
           $thequality = get_post_meta(get_the_ID(), 'media_qty', true);
           if ($thequality == 1) {
@@ -313,7 +363,7 @@ if ($thecategory != 'Uncategorized') {
           }
           $thebitrate = '0';
 
-          if (strpos($theurl, 'm3u8') !== false) {
+          if (strpos($theurl, 'mp4') !== false) {
           echo '<item sdImg="'.$theimg.'" hdImg="'.$theimg.'">
           <title>'.$thetitle.'</title>
           <description>'.$thedescription.'</description>
@@ -441,6 +491,26 @@ $themainarray = array (
     )
 );
 
+function media_dur_conv($url)
+{
+    $result = shell_exec('ffprobe -i ' . ($url) . ' 2>&1');
+	preg_match('/Duration: \d\d:\d\d:\d\d/', $result, $match);
+	$match_time = preg_replace('/Duration:\D/', '', reset($match));
+	$str_time = preg_replace("/^([\d]{1,2})\:([\d]{2})$/", "00:$1:$2", $match_time);
+	sscanf($str_time, "%d:%d:%d", $hours, $minutes, $seconds);
+	$time_seconds = $hours * 3600 + $minutes * 60 + $seconds;
+	return($time_seconds);
+}
+
+
+function media_bitrate_conv($url)
+{
+    $result = shell_exec('ffprobe -i ' . ($url) . ' 2>&1');
+	preg_match('/bitrate:\D\d\d\d\s/', $result, $match);
+	$rate = preg_replace('/bitrate:\D/', '', $match);
+	return(reset($rate));
+}
+
 $cats = get_categories();
 
 foreach ($cats as $cat) {
@@ -454,9 +524,11 @@ foreach ($cats as $cat) {
           $thetitle = get_the_title();
           $theurl = get_post_meta(get_the_ID(), 'media_url', true);
           $thedescription = get_post_meta(get_the_ID(), 'media_description', true);
+          //$media_duration = get_post_meta(get_the_ID(), 'media_duration', true);
+          $media_genre = get_post_meta(get_the_ID(), 'media_genre', true);
           $theimg =  wp_get_attachment_image_src( get_post_thumbnail_id( get_the_ID()), 'single-post-thumbnail' );
 					$theimg =  $theimg[0];
-          $thefrmt = 'hls';
+          $thefrmt = 'mp4';
           $thestrg = 'full-adaptation';
           $thequality = get_post_meta(get_the_ID(), 'media_qty', true);
 					$ispremium = get_post_meta(get_the_ID(), 'media_excl_premium', true);
@@ -469,7 +541,7 @@ foreach ($cats as $cat) {
           }
           $thebitrate = '0';
 
-          if (strpos($theurl, 'm3u8') !== false & $isactive == 1) {
+          if (strpos($theurl, 'mp4') !== false & $isactive == 1) {
 						if ($ispremium == 1) {
 							$theurl_checked	= 'http://non.disclosed.com';
 						}
@@ -477,15 +549,19 @@ foreach ($cats as $cat) {
 							$theurl_checked = $theurl;
 						}
 
-$genres = array("special");
+
+$genres = array($media_genre);
 $tags = array($thecategory);
+//$duration = $media_duration;
+$bitrate = media_bitrate_conv($theurl);
+$duration = media_dur_conv($theurl);
 $captions = array();
 if($theimg === null) {
 	$thetitle_ = preg_replace('/\s+/', '_', $thetitle);
 	$theimg = get_site_url().'/?feed=gen_img&wi=800&orig=&he=450&fontsize=30&txt='.$thetitle_.'.png';
 }
 if(!$thedescription) {
-	$thedescription = 'Enjoy '.$thetitle.' from the '.$thecategory.' category. You may also view it on your computer using VLC or any other hls compatible audio/video player from : '.$theurl_checked;
+	$thedescription = 'Enjoy '.$thetitle.' from the '.$thecategory.' category. You may also view it on your computer using VLC or any other mp4 compatible audio/video player from : '.$theurl_checked;
 }
 $theitemarray = array(
 	"id" => hash('ripemd160', $thetitle.$theimg.$thecatid),
@@ -498,7 +574,8 @@ $theitemarray = array(
 	"content" => array (
 		"dateAdded" => get_the_modified_date('Y-m-d\TH:i:s\Z'),
 		"captions" => $captions,
-		"duration" => 999,
+		"duration" => (int)$duration,	
+		"bitrate" => (int)$bitrate,
 	)
 );
 
@@ -556,7 +633,7 @@ if ($thecatid == $_GET['cat']) {
 					$theurl =  htmlspecialchars($theurl);
 					$ispremium = get_post_meta(get_the_ID(), 'media_excl_premium', true);
 					$isactive = get_post_meta(get_the_ID(), 'media_active', true);
-					if (strpos($theurl, 'm3u8') !== false & $isactive == 1) {
+					if (strpos($theurl, 'mp4') !== false & $isactive == 1) {
 						if ($ispremium == 1) {
 							$theurl_checked	= 'http://non.disclosed.com';
 						}
@@ -566,7 +643,7 @@ if ($thecatid == $_GET['cat']) {
 
           $thedescription = get_post_meta(get_the_ID(), 'media_description', true);
 					if(!$thedescription) {
-						$thedescription = 'Enjoy '.$thetitle.' from the '.$thecategory.' category. You may also view it on your computer using VLC or any other hls compatible audio/video player from : '.$theurl_checked;
+						$thedescription = 'Enjoy '.$thetitle.' from the '.$thecategory.' category. You may also view it on your computer using VLC or any other mp4 compatible audio/video player from : '.$theurl_checked;
 					}
           $theimg =  wp_get_attachment_image_src( get_post_thumbnail_id( get_the_ID()), 'single-post-thumbnail' );
 					$theimg =  $theimg[0];
@@ -575,7 +652,7 @@ if ($thecatid == $_GET['cat']) {
 						$theimg = get_site_url().'/?feed=gen_img&wi=800&orig=&he=450&fontsize=30&txt='.$thetitle_.'.png';
 					}
 
-          $thefrmt = 'hls';
+          $thefrmt = 'mp4';
           $thestrg = 'full-adaptation';
           $thequality = get_post_meta(get_the_ID(), 'media_qty', true);
           if ($thequality == 1) {
@@ -640,7 +717,7 @@ echo '<section><listItemLockup><title>'.$thecategory.'</title><decorationLabel>'
           $theurl = get_post_meta(get_the_ID(), 'media_url', true);
 					$theimg =  wp_get_attachment_image_src( get_post_thumbnail_id( get_the_ID()), 'single-post-thumbnail' );
 					$theimg =  $theimg[0];
-  if (strpos($theurl, 'm3u8') !== false) {
+  if (strpos($theurl, 'mp4') !== false) {
           echo '<lockup videoURL="'.$theurl.'"><img src="'.$theimg.'" width="250" height="150" /></lockup>';
         }
           endwhile;
@@ -761,7 +838,7 @@ $theurl = get_post_meta(get_the_ID(), 'media_url', true);
 $thestatus = get_post_meta(get_the_ID(), 'media_active', true);
 $isexcluded = get_post_meta(get_the_ID(), 'media_excl_check', true);
 
-if (strpos($theurl, 'm3u8') !== false) {
+if (strpos($theurl, 'mp4') !== false) {
 $thecurrentstatus = checkurl_($theurl);
 if ($thestatus != checkurl_($theurl)) {
 echo 'there will be some updating from '.$thestatus.' to '.$thecurrentstatus.' for '.$theurl.'<br />';
@@ -778,7 +855,7 @@ else {
 }
 }
 else {
-	echo 'this is not an m3u8 link, will skip ('.$theurl.')<br />';
+	echo 'this is not an mp4 link, will skip ('.$theurl.')<br />';
 }
 endwhile;
 endif;
@@ -1196,8 +1273,8 @@ function custom_media_item_column( $column, $post_id ) {
 				$typ = get_post_meta( $post_id , 'media_type' , true );
 				if ( $typ == 1 ) {
 					$ur = get_post_meta( $post_id , 'media_url' , true );
-					if (strpos($ur, 'm3u8') !== false) {
-								echo 'M3U8 VIDEO';
+					if (strpos($ur, 'mp4') !== false) {
+								echo 'mp4 VIDEO';
 						}
 						else {
 							echo 'VIDEO';
@@ -1206,8 +1283,8 @@ function custom_media_item_column( $column, $post_id ) {
 				}
 				else if ( $typ == 0 ) {
 $ur = get_post_meta( $post_id , 'media_url' , true );
-					if (strpos($ur, 'm3u8') !== false) {
-								echo 'M3U8 RADIO';
+					if (strpos($ur, 'mp4') !== false) {
+								echo 'mp4 RADIO';
 						}
 else {
 					echo 'RADIO';

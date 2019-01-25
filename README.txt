@@ -1,5 +1,15 @@
 IELKO WP MEDIA MANAGER
 
+**Fork Notes**
+
+I am only interested in working with the Roku DP at this time so that's what I'm improving.
+*HLS hardcoded URLS have been changed to MP4 hardcoded
+*bitrate and duration is now pulled via ffmpeg (yes you need it installed)
+*Genres are nolonger hard coded and can be set via a drop down menu of approved Roku specification genres (note it doesn't remember which one you chose if you have to edit the post)
+*other stuff I forgot.
+
+I'm making these changes for myself, if it's useful to someone else great... but I'm not interested in developing it too far outside my needs. thanks to the original dev for the hard work!
+
 Purpose of this plugin :
 
 Manage remote or local media from a wordpress installation and provide xml feeds. Also currently a roku and tvos app is generated using a third party open source project automatically from the same interface.
